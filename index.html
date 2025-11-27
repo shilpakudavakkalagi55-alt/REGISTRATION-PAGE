@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MyShop | E‑commerce Dashboard</title>
+  <style>
+    /* Base */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --brand-dark: #232f3e;
+      --brand-accent: #ff9900;
+      --brand-accent-hover: #e68a00;
+      --text: #111;
+      --muted: #555;
+      --bg: #f3f3f3;
+      --card: #fff;
+      --primary: #2575fc;
+      --primary-hover: #1760d8;
+      --success: #22c55e;
+      --danger: #ef4444;
+    }
+    body { font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--text); }
+
+    /* Header */
+    header {
+      position: sticky; top: 0; z-index: 10;
+      background: var(--brand-dark); color: #fff;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.75rem 1rem;
+    }
+    .brand { display: flex; align-items: center; gap: 0.5rem; }
+    .brand h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: 0.2px; }
+    .search {
+      flex: 1; max-width: 600px; margin: 0 1rem; display: flex; gap: 0.5rem;
+    }
+    .search input {
+      flex: 1; padding: 0.6rem 0.75rem; border-radius: 6px; border: none;
+    }
+    .search button {
+      padding: 0.6rem 0.9rem; border: none; border-radius: 6px; background: var(--brand-accent); color: #fff; cursor: pointer;
+    }
+    nav { display: flex; align-items: center; gap: 0.75rem; }
+    nav a, nav button {
+      color: #fff; text-decoration: none; padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid transparent; background: transparent; cursor: pointer;
+    }
+    nav a:hover, nav button:hover { border-color: rgba(255,255,255,0.3); }
+
+    /* Layout */
+    .container { max-width: 1200px; margin: 0 auto; padding: 1rem; }
+
+    /* Pages */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* Auth forms */
+    .auth-card {
+      max-width: 420px; margin: 2rem auto; background: var(--card);
+      border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); padding: 1.25rem;
+    }
+    .auth-card h2 { margin-bottom: 0.75rem; }
+    .auth-desc { color: var(--muted); margin-bottom: 1rem; font-size: 0.95rem; }
+    .form-group { margin-bottom: 0.85rem; }
+    .form-group label { display: block; margin-bottom: 0.35rem; font-weight: 600; }
+    .form-group input {
+      width: 100%; padding: 0.7rem 0.8rem; border: 1px solid #ddd; border-radius: 8px;
+    }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 0.7rem 0.9rem; border: none; border-radius: 8px; cursor: pointer;
+    }
+    .btn-primary { background: var(--brand-accent); color: #fff; width: 100%; }
+    .btn-primary:hover { background: var(--brand-accent-hover); }
+    .helper { display: flex; justify-content: space-between; margin-top: 0.6rem; font-size: 0.9rem; }
+
+    /* Categories filter */
+    .filters {
+      display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.5rem 0 1rem;
+    }
+    .chip {
+      padding: 0.4rem 0.7rem; border-radius: 999px; border: 1px solid #ddd; background: #fff; cursor: pointer; font-size: 0.9rem;
+    }
+    .chip.active { border-color: var(--primary); color: var(--primary); background: #eef5ff; }
+
+    /* Grid */
+    .grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;
+    }
+    .card {
+      background: var(--card); border-radius: 12px; overflow: hidden;
+      border: 1px solid #eee; display: flex; flex-direction: column;
+      transition: transform 0.2s ease;
+    }
+    .card:hover { transform: translateY(-2px); }
+    .card img { width: 100%; height: 180px; object-fit: cover; background: #fafafa; }
+    .card-body { padding: 0.8rem; display: flex; flex-direction: column; gap: 0.4rem; }
+    .title { font-weight: 700; font-size: 1rem; }
+    .subtitle { color: var(--muted); font-size: 0.9rem; }
+    .price { font-weight: 700; color: var(--text); }
+    .cta { margin-top: 0.4rem; display: flex; gap: 0.5rem; }
+    .btn-add { background: var(--primary); color: #fff; flex: 1; }
+    .btn-add:hover { background: var(--primary-hover); }
+    .btn-wish { background: #fff; border: 1px solid #ddd; }
+
+    /* Cart */
+    .cart-wrap {
+      display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 1rem;
+    }
+    .cart-list, .cart-summary {
+      background: var(--card); border-radius: 12px; padding: 1rem; border: 1px solid #eee;
+    }
+    .cart-item {
+      display: grid; grid-template-columns: 60px 1fr auto auto; align-items: center; gap: 0.8rem;
+      padding: 0.6rem 0; border-bottom: 1px solid #f0f0f0;
+    }
+    .cart-item:last-child { border-bottom: none; }
+    .qty { display: inline-flex; align-items: center; gap: 0.4rem; }
+    .qty button { padding: 0.25rem 0.5rem; border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: pointer; }
+    .remove { color: var(--danger); cursor: pointer; font-size: 0.9rem; }
+    .summary-row { display: flex; justify-content: space-between; margin: 0.4rem 0; }
+    .checkout { width: 100%; background: var(--success); color: #fff; margin-top: 0.6rem; }
+
+    /* Footer */
+    footer {
+      margin-top: 2rem; padding: 1rem; text-align: center; color: var(--muted);
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 900px) {
+      .cart-wrap { grid-template-columns: 1fr; }
+      .search { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="#ff9900" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2l3 7h7l-5.5 4 2.5 7-6-4.5L7 20l2.5-7L4 9h7l3-7z"/>
+      </svg>
+      <h1>MyShop</h1>
+    </div>
+    <div class="search">
+      <input id="searchInput" type="text" placeholder="Search for products..." />
+      <button id="searchBtn">Search</button>
+    </div>
+    <nav>
+      <button onclick="showPage('shop')">Shop</button>
+      <button onclick="showPage('cart')">Cart (<span id="cartCount">0</span>)</button>
+      <button onclick="showPage('login')" id="navLogin">Login</button>
+      <button onclick="showPage('register')" id="navRegister">Register</button>
+      <button onclick="logout()" id="navLogout" style="display:none;">Logout</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <!-- Login Page -->
+    <section id="login" class="page">
+      <div class="auth-card">
+        <h2>Login</h2>
+        <p class="auth-desc">Welcome back. Enter your credentials to continue.</p>
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="loginEmail">Email</label>
+            <input id="loginEmail" type="email" required />
+          </div>
+          <div class="form-group">
+            <label for="loginPassword">Password</label>
+            <input id="loginPassword" type="password" required />
+          </div>
+          <button class="btn btn-primary" type="submit">Login</button>
+          <div class="helper">
+            <span>New customer?</span>
+            <a href="#" onclick="showPage('register')">Create an account</a>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Register Page -->
+    <section id="register" class="page">
+      <div class="auth-card">
+        <h2>Create account</h2>
+        <p class="auth-desc">Your account lets you track orders and manage your cart.</p>
+        <form id="registerForm">
+          <div class="form-group">
+            <label for="regName">Name</label>
+            <input id="regName" type="text" required />
+          </div>
+          <div class="form-group">
+            <label for="regEmail">Email</label>
+            <input id="regEmail" type="email" required />
+          </div>
+          <div class="form-group">echo "# Registration-page" >> 
+            <label for="regPassword">Password</label>
+            <input id="regPassword" type="password" required />
+          </div>
+          <div class="form-group">
+            <label for="regConfirm">Confirm password</label>
+            <input id="regConfirm" type="password" required />
+          </div>
+          <button class="btn btn-primary" type="submit">Create account</button>
+          <div class="helper">
+            <span>Already have an account?</span>
+            <a href="#" onclick="showPage('login')">Sign in</a>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Shop/Dashboard -->
+    <section id="shop" class="page">
+      <h2>Browse products</h2>
+
+      <!-- Category chips -->
+      <div class="filters" id="filters">
+        <button class="chip active" data-cat="all">All</button>
+        <button class="chip" data-cat="clothes">Clothes</button>
+        <button class="chip" data-cat="skincare">Skincare</button>
+        <button class="chip" data-cat="perfumes">Perfumes</button>
+      </div>
+
+      <!-- Product grid -->
+      <div class="grid" id="productGrid"></div>
+    </section>
+
+    <!-- Cart Page -->
+    <section id="cart" class="page">
+      <h2>Your cart</h2>
+      <div class="cart-wrap">
+        <div class="cart-list" id="cartList"></div>
+        <div class="cart-summary">
+          <h3>Order summary</h3>
+          <div class="summary-row"><span>Items</span><strong id="sumItems">0</strong></div>
+          <div class="summary-row"><span>Subtotal</span><strong id="sumSubtotal">₹0.00</strong></div>
+          <div class="summary-row"><span>Shipping</span><strong>₹0.00</strong></div>
+          <hr />
+          <div class="summary-row"><span>Total</span><strong id="sumTotal">₹0.00</strong></div>
+          <button class="btn checkout" onclick="checkout()">Proceed to checkout</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <small>Demo template inspired by Amazon-style layouts. No backend included.</small>
+  </footer>
+
+  <script>
+    // Demo "database"
+    const products = [
+      // Clothes
+      { id: 'c1', title: 'Cotton Crew T‑Shirt', subtitle: 'Soft & breathable', price: 499, cat: 'clothes', img: 'crew tshirt.jpeg' },
+      { id: 'c2', title: 'Slim Fit Jeans', subtitle: 'Modern blue denim', price: 1799, cat: 'clothes', img: 'jeans.webp' },
+      { id: 'c3', title: 'Leather Biker Jacket', subtitle: 'Bold, durable style', price: 5499, cat: 'clothes', img: 'leather jacket.avif' },
+      { id: 'c4', title: 'Summer Floral Dress', subtitle: 'Light & breezy', price: 2299, cat: 'clothes', img: 'summer.webp' },
+      { id: 'c5', title: 'Athletic Hoodie', subtitle: 'Warm & flexible', price: 1999, cat: 'clothes', img: 'hoddie.jpg' },
+
+      // Skincare
+      { id: 's1', title: 'Hydrating Moisturizer', subtitle: 'Ceramide complex', price: 899, cat: 'skincare', img: '_Moisturizer_.webp' },
+      { id: 's2', title: 'Toner', subtitle: 'SLS-free toner', price: 349, cat: 'skincare', img: 'tonerr.webp' },
+      { id: 's3', title: 'Vitamin C Serum 15%', subtitle: 'Serum', price: 1199, cat: 'skincare', img: 'serum.webp' },
+      { id: 's4', title: 'SPF 50 Sunscreen', subtitle: 'Sunscreen', price: 699, cat: 'skincare', img: 'sunscreen.jpeg' },
+
+      // Perfumes
+      { id: 'p1', title: 'Floral Eau de Parfum', subtitle: 'Jasmine & rose', price: 2599, cat: 'perfumes', img: 'rose perfume.avif' },
+      { id: 'p2', title: 'Woody Eau de Toilette', subtitle: 'Cedar & vetiver', price: 2199, cat: 'perfumes', img: 'woody perfume.avif' },
+      { id: 'p3', title: 'Oriental Attar', subtitle: 'Oud & spice blend', price: 2999, cat: 'perfumes', img: 'perfume3.avif' },
+      { id: 'p4', title: 'Citrus Cologne', subtitle: 'Lemon & bergamot', price: 1799, cat: 'perfumes', img: 'perfume1.avif' },
+    ];
+
+    // State
+    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    let user = JSON.parse(localStorage.getItem('user') || 'null');
+    let currentCat = 'all';
+
+    // Utilities
+    function formatCurrency(v) { return '₹' + v.toFixed(2); }
+    function saveCart() { localStorage.setItem('cart', JSON.stringify(cart)); }
+    function saveUser() { localStorage.setItem('user', JSON.stringify(user)); }
+
+    // Routing
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      if (id === 'cart') renderCart();
+      if (id === 'shop') renderProducts();
+    }
+
+    // Auth UI
+    function updateAuthUI() {
+      const navLogin = document.getElementById('navLogin');
+      const navRegister = document.getElementById('navRegister');
+      const navLogout = document.getElementById('navLogout');
+      if (user) {
+        navLogin.style.display = 'none';
+        navRegister.style.display = 'none';
+        navLogout.style.display = 'inline-block';
+      } else {
+        navLogin.style.display = 'inline-block';
+        navRegister.style.display = 'inline-block';
+        navLogout.style.display = 'none';
+      }
+    }
+
+    function logout() {
+      user = null; saveUser(); updateAuthUI();
+      showPage('login');
+    }
+
+    // Render products
+    function renderProducts() {
+      const grid = document.getElementById('productGrid');
+      const term = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const filtered = products.filter(p =>
+        (currentCat === 'all' || p.cat === currentCat) &&
+        (term === '' || [p.title, p.subtitle].join(' ').toLowerCase().includes(term))
+      );
+
+      grid.innerHTML = filtered.map(p => `
+        <div class="card">
+          <img src="${p.img}" alt="${p.title}" />
+          <div class="card-body">
+            <div class="title">${p.title}</div>
+            <div class="subtitle">${p.subtitle}</div>
+            <div class="price">${formatCurrency(p.price)}</div>
+            <div class="cta">
+              <button class="btn btn-add" onclick="addToCart('${p.id}')">Add to cart</button>
+              <button class="btn btn-wish" onclick="alert('Added to wishlist')">♡</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      if (!filtered.length) {
+        grid.innerHTML = `<div class="auth-desc">No products found. Try clearing filters or search.</div>`;
+      }
+    }
+
+    // Category filters
+    document.getElementById('filters').addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip');
+      if (!btn) return;
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      currentCat = btn.dataset.cat;
+      renderProducts();
+    });
+
+    // Search
+    document.getElementById('searchBtn').addEventListener('click', renderProducts);
+    document.getElementById('searchInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') renderProducts();
+    });
+
+    // Cart
+    function addToCart(id) {
+      const product = products.find(p => p.id === id);
+      if (!product) return;
+      const existing = cart.find(item => item.id === id);
+      if (existing) existing.qty += 1;
+      else cart.push({ id: product.id, title: product.title, price: product.price, img: product.img, qty: 1 });
+      saveCart();
+      updateCartCount();
+      // Subtle feedback
+      const el = document.getElementById('cartCount');
+      el.style.transform = 'scale(1.2)';
+      setTimeout(() => el.style.transform = 'scale(1)', 150);
+    }
+
+    function updateCartCount() {
+      const count = cart.reduce((sum, i) => sum + i.qty, 0);
+      document.getElementById('cartCount').textContent = count;
+    }
+
+    function renderCart() {
+      const list = document.getElementById('cartList');
+      if (!cart.length) {
+        list.innerHTML = `<p class="auth-desc">Your cart is empty. Add some products from the shop.</p>`;
+        document.getElementById('sumItems').textContent = 0;
+        document.getElementById('sumSubtotal').textContent = formatCurrency(0);
+        document.getElementById('sumTotal').textContent = formatCurrency(0);
+        return;
+      }
+
+      list.innerHTML = cart.map(item => `
+        <div class="cart-item">
+          <img src="${item.img}" alt="${item.title}" />
+          <div>
+            <div class="title">${item.title}</div>
+            <div class="subtitle">${formatCurrency(item.price)}</div>
+            <span class="remove" onclick="removeItem('${item.id}')">Remove</span>
+          </div>
+          <div class="qty">
+            <button onclick="decrQty('${item.id}')">−</button>
+            <strong>${item.qty}</strong>
+            <button onclick="incrQty('${item.id}')">+</button>
+          </div>
+          <div><strong>${formatCurrency(item.qty * item.price)}</strong></div>
+        </div>
+      `).join('');
+
+      const items = cart.reduce((s, i) => s + i.qty, 0);
+      const subtotal = cart.reduce((s, i) => s + i.qty * i.price, 0);
+      document.getElementById('sumItems').textContent = items;
+      document.getElementById('sumSubtotal').textContent = formatCurrency(subtotal);
+      document.getElementById('sumTotal').textContent = formatCurrency(subtotal); // shipping = 0 in demo
+    }
+
+    function removeItem(id) {
+      cart = cart.filter(i => i.id !== id);
+      saveCart(); updateCartCount(); renderCart();
+    }
+    function incrQty(id) {
+      const it = cart.find(i => i.id === id);
+      if (it) it.qty += 1; saveCart(); updateCartCount(); renderCart();
+    }
+    function decrQty(id) {
+      const it = cart.find(i => i.id === id);
+      if (!it) return;
+      it.qty -= 1;
+      if (it.qty <= 0) cart = cart.filter(i => i.id !== id);
+      saveCart(); updateCartCount(); renderCart();
+    }
+
+    function checkout() {
+      if (!user) {
+        alert('Please login to proceed to checkout.');
+        showPage('login');
+        return;
+      }
+      if (!cart.length) {
+        alert('Your cart is empty.');
+        return;
+      }
+      alert('Checkout successful (demo).');
+      cart = []; saveCart(); updateCartCount(); renderCart();
+    }
+
+    // Register
+    document.getElementById('registerForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('regName').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const pass = document.getElementById('regPassword').value;
+      const confirm = document.getElementById('regConfirm').value;
+      if (!name || !email || !pass || !confirm) return alert('Please fill all fields.');
+      if (pass !== confirm) return alert('Passwords do not match.');
+      user = { name, email }; saveUser(); updateAuthUI();
+      alert('Account created. You are now logged in.');
+      showPage('shop');
+    });
+
+    // Login
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const pass = document.getElementById('loginPassword').value;
+      if (!email || !pass) return alert('Please enter email and password.');
+      // Demo: any email+password logs in
+      user = { name: email.split('@')[0], email }; saveUser(); updateAuthUI();
+      alert('Logged in successfully.');
+      showPage('shop');
+    });
+
+    // Init
+    updateAuthUI();
+    updateCartCount();
+    showPage('shop');
+    renderProducts();
+  </script>
+</body>
+</html>
